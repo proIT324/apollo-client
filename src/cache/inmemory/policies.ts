@@ -415,6 +415,11 @@ export class Policies {
   public addPossibleTypes(possibleTypes: PossibleTypesMap) {
     (this.usingPossibleTypes as boolean) = true;
     Object.keys(possibleTypes).forEach(supertype => {
+      // Make sure all types have an entry in this.supertypeMap, even if
+      // their supertype set is empty, so we can return false immediately
+      // from policies.fragmentMatches for unknown supertypes.
+      this.getSupertypeSet(supertype, true);
+
       possibleTypes[supertype].forEach(subtype => {
         this.getSupertypeSet(subtype, true)!.add(supertype);
         const match = subtype.match(TypeOrFieldNameRegExp);
@@ -484,11 +489,22 @@ export class Policies {
     if (typename === supertype) return true;
 
     if (this.usingPossibleTypes) {
+      if (!this.supertypeMap.has(supertype)) {
+        invariant.warn(`Fragment${
+  fragment.kind === "FragmentDefinition" ? " " + fragment.name.value : ""
+} will never match because its type condition ${supertype} is unknown.
+Please add this supertype to your possibleTypes configuration.`,
+        );
+        return false;
+      }
+
       const typenameSupertypeSet = this.getSupertypeSet(typename, true)!;
       const workQueue = [typenameSupertypeSet];
       const maybeEnqueue = (subtype: string) => {
         const supertypeSet = this.getSupertypeSet(subtype, false);
-        if (supertypeSet && workQueue.indexOf(supertypeSet) < 0) {
+        if (supertypeSet &&
+            supertypeSet.size &&
+            workQueue.indexOf(supertypeSet) < 0) {
           workQueue.push(supertypeSet);
         }
       };
