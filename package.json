@@ -115,7 +115,7 @@
     "rxjs": "6.6.2",
     "subscriptions-transport-ws": "^0.9.17",
     "ts-jest": "26.2.0",
-    "ts-node": "8.10.2",
+    "ts-node": "9.0.0",
     "tsc-watch": "3.0.1",
     "typescript": "3.9.7",
     "wait-for-observables": "^1.0.3"
